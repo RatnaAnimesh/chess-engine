@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+
+# C++ / Build
+build/
+*.so
+*.o
+*.dylib
+
+# Checkpoints (Large files)
+*.pt
+*.pth
+!checkpoint_best.pt  # Optional: Keep the best one if you want
+
+# Logs & Data
+*.log
+benchmark_results.pgn
+replay_buffer.pkl
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
