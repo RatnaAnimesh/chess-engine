@@ -18,35 +18,52 @@
 ## 🧮 Mathematical Foundations
 
 ### 1. The AlphaZero Objective
-The goal is to approximate the optimal policy $\pi^*(s)$ and value $v^*(s)$ for any board state $s$.
-We use a neural network $f_\theta(s) = (\mathbf{p}, v)$ where:
-*   $\mathbf{p}$: A vector of probabilities over all legal moves (the "prior").
-*   $v$: A scalar in $[-1, 1]$ estimating the expected game outcome.
+The goal is to approximate the optimal policy **π\*(s)** and value **v\*(s)** for any board state *s*.
+We use a neural network `f(s) = (p, v)` where:
+*   **p**: A vector of probabilities over all legal moves (the "prior").
+*   **v**: A scalar in `[-1, 1]` estimating the expected game outcome.
 
 The network is trained to minimize the following loss function:
-$$ L = (z - v)^2 - \boldsymbol{\pi}^T \log \mathbf{p} + c ||\theta||^2 $$
-*   $(z - v)^2$: **Mean Squared Error**. $z$ is the actual game result (+1/-1). We want $v$ to predict $z$.
-*   $-\boldsymbol{\pi}^T \log \mathbf{p}$: **Cross-Entropy Loss**. $\boldsymbol{\pi}$ is the "improved" policy from MCTS. We want the network's prior $\mathbf{p}$ to match the MCTS search probabilities.
-*   $c ||\theta||^2$: **L2 Regularization** (Weight Decay) to prevent overfitting.
+
+```math
+L = (z - v)^2 - \pi^T \log p + c ||\theta||^2
+```
+
+*   **(z - v)^2**: **Mean Squared Error**. *z* is the actual game result (+1/-1). We want *v* to predict *z*.
+*   **-π^T log p**: **Cross-Entropy Loss**. *π* is the "improved" policy from MCTS. We want the network's prior *p* to match the MCTS search probabilities.
+*   **c ||θ||^2**: **L2 Regularization** (Weight Decay) to prevent overfitting.
 
 ### 2. Monte Carlo Tree Search (MCTS)
 MCTS is the engine's "reasoning" process. It builds a search tree to improve upon the raw network predictions.
 
 **The PUCT Formula (Selection Phase)**
-At each node, we select the child action $a$ that maximizes:
-$$ U(s, a) = Q(s, a) + c_{puct} \cdot P(s, a) \cdot \frac{\sqrt{\sum_b N(s, b)}}{1 + N(s, a)} $$
-*   **$Q(s, a)$**: The mean value of action $a$ (Exploitation).
-*   **$P(s, a)$**: The prior probability from the network (Guidance).
-*   **$\frac{\sqrt{\sum N}}{1+N}$**: The exploration term. As we visit other nodes more, this term grows for unvisited nodes, encouraging exploration.
+At each node, we select the child action *a* that maximizes:
+
+```math
+U(s, a) = Q(s, a) + c_{puct} \cdot P(s, a) \cdot \frac{\sqrt{\sum_b N(s, b)}}{1 + N(s, a)}
+```
+
+*   **Q(s, a)**: The mean value of action *a* (Exploitation).
+*   **P(s, a)**: The prior probability from the network (Guidance).
+*   **sqrt(sum(N)) / (1+N)**: The exploration term. As we visit other nodes more, this term grows for unvisited nodes, encouraging exploration.
 
 **Backpropagation**
-When we reach a leaf and evaluate it as $v$, we update the path:
-$$ Q(s, a) = \frac{N(s, a) \cdot Q(s, a) + v}{N(s, a) + 1} $$
-$$ N(s, a) \leftarrow N(s, a) + 1 $$
+When we reach a leaf and evaluate it as *v*, we update the path:
+
+```math
+Q(s, a) = \frac{N(s, a) \cdot Q(s, a) + v}{N(s, a) + 1}
+```
+```math
+N(s, a) \leftarrow N(s, a) + 1
+```
 
 ### 3. NNUE Distillation
 To speed up the engine, we distill the heavy ResNet (Teacher) into a fast NNUE (Student).
-$$ L_{distill} = \alpha \cdot \text{MSE}(V_{student}, V_{teacher}) + \beta \cdot \text{KL}(P_{student} || P_{teacher}) $$
+
+```math
+L_{distill} = \alpha \cdot \text{MSE}(V_{student}, V_{teacher}) + \beta \cdot \text{KL}(P_{student} || P_{teacher})
+```
+
 This forces the Student to mimic the Teacher's outputs, effectively compressing the knowledge.
 
 ---
